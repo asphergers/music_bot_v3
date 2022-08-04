@@ -2,12 +2,11 @@ import * as config from "../../config.json";
 const prefix = config.prefix;
 
 module.exports = (Discord: null, client: typeof Client, message: typeof Client) => {
-    if (!message.content.startsWith(prefix) || message.author.bot) return console.log(message.content);
+    if (!message.content.startsWith(prefix) || message.author.bot) return;
 
     const args = message.content.slice(prefix.length).split(/ +/);
 
     const cmd = args.shift().toLowerCase();
-    console.log(cmd);
 
     const command = client.commands.get(cmd) || client.commands.find((a: typeof Client) => a.aliases && a.aliases.includes(cmd));
 
