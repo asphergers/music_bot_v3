@@ -11,14 +11,13 @@ const queue = map.map;
 
 module.exports = {
     name: 'play',
+    aliases: ["play", "p"],
     cooldown: 0,
     description: 'main command for playing music',
     async execute(message: typeof Client, args: string[]) {
         const voice_channel = message.member.voice.channel;
         if (!voice_channel) return message.channel.send("get in vc clownboy");
-        const permissions = voice_channel.permissionsFor(message.client.user);
-        if (!permissions.has('CONNECT')) return message.channel.send("no perms :(");
-        if (!permissions.has('SPEAK')) return message.channel.send("no perms :(");
+//        const permissions = voice_channel.permissionsFor(message.client.user);
 
         const server_queue = queue.get(message.guild.id);
 
@@ -57,7 +56,8 @@ module.exports = {
                 voice_channel: voice_channel,
                 text_channel: message.channel,
                 connection: null,
-                songs: []
+                songs: [],
+                loop: false
             }
 
             queue.set(message.guild.id, queue_constructor);

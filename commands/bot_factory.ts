@@ -11,7 +11,9 @@ export interface Song {
     type: string;
 }
 
-export const video_player = async (guild: typeof Client, song: Song, message: typeof Client) => {
+export const video_player = async (guild: typeof Client, song: Song, message: typeof Client, seconds?: number) => {
+    if (seconds === undefined) seconds = 0;
+
     const connection = joinVoiceChannel({
         channelId: message.member.voice.channel.id,
         guildId: message.guild.id,
@@ -27,7 +29,7 @@ export const video_player = async (guild: typeof Client, song: Song, message: ty
         return;
     }
 
-    const stream = await play.stream(song.url);
+    const stream = await play.stream(song.url, {seek: seconds});
     const player = createAudioPlayer({
         behaviors: {
             noSubscriber: NoSubscriberBehavior.Play
@@ -43,7 +45,7 @@ export const video_player = async (guild: typeof Client, song: Song, message: ty
     });
 
     player.on(AudioPlayerStatus.Idle, () => {
-        if (1 < 0) { // this will be used to implement a loop feature later
+        if (queue.get(guild.id).loop) { // this will be used to implement a loop feature later
             video_player(guild, song_queue.songs[0], message);
         } else {
             try {
@@ -58,3 +60,4 @@ export const video_player = async (guild: typeof Client, song: Song, message: ty
 
     await song_queue.text_channel.send(`Now playing ${song.title}`);
 }
+
