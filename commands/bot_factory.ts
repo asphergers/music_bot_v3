@@ -45,6 +45,11 @@ export const video_player = async (guild: typeof Client, song: Song, message: ty
     });
 
     player.on(AudioPlayerStatus.Idle, () => {
+        if (song.title !== song_queue.songs[0].title) {
+            console.log("didn't skip");
+            return;
+        }
+
         if (queue.get(guild.id).loop) { // this will be used to implement a loop feature later
             video_player(guild, song_queue.songs[0], message);
         } else {
