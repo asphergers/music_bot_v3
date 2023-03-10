@@ -2,12 +2,11 @@ const play = require("play-dl");
 const yt_search = require("yt-search")
 const { joinVoiceChannel } = require('@discordjs/voice')
 import * as map from "./map";
-import { video_player, Song } from "./bot_factory";
+import { Song, Bot_Instance } from "./bot_factory";
 
 console.log(map);
 
 const queue = map.map;
-
 
 module.exports = {
     name: 'play',
@@ -16,11 +15,9 @@ module.exports = {
     description: 'main command for playing music',
     async execute(message: typeof Client, args: string[]) {
         const voice_channel = message.member.voice.channel;
-        if (!voice_channel) return message.channel.send("get in vc clownboy");
-//        const permissions = voice_channel.permissionsFor(message.client.user);
+        if (!voice_channel) return message.channel.send("get in vc clowboy");
 
         const server_queue = queue.get(message.guild.id);
-
 
         if (args[0].startsWith("http") && play.validate(args[0]) === "yt_video") {
             var song_info = await play.video_basic_info(args[0]);
@@ -28,7 +25,7 @@ module.exports = {
                 title: song_info.video_details.title,
                 url: song_info.video_details.url,
                 length: song_info.video_details.durationInSec,
-                type: "youtube"
+                type: "youtube",
             }
         } else {
             const video_finder = async(query: string) => {
@@ -43,7 +40,7 @@ module.exports = {
                     title: video.title,
                     url: video.url,
                     length: video.duration,
-                    type: "youtube"
+                    type: "youtube",
                 }
             } else {
                 message.channel.send("no results found from youtube");
@@ -57,11 +54,12 @@ module.exports = {
                 text_channel: message.channel,
                 connection: null,
                 songs: [],
-                loop: false
+                loop: false,
+                bot: new Bot_Instance(message),
             }
 
-            queue.set(message.guild.id, queue_constructor);
             queue_constructor.songs.push(song);
+            queue.set(message.guild.id, queue_constructor);
 
             try {
                 const connection = joinVoiceChannel({
@@ -70,7 +68,9 @@ module.exports = {
                         adapterCreator: message.guild.voiceAdapterCreator
                 });
                 queue_constructor.connection = connection;
-                video_player(message.guild, queue_constructor.songs[0], message);
+                await queue_constructor.bot.set_stream(queue_constructor.songs[0]);
+                await queue_constructor.bot.play_song();
+                message.channel.send(`now playing ${queue.get(message.guild.id).songs[0].title}`);
             } catch (err) {
                 queue.delete(message.guild.id);
                 message.channel.send("unable to join vc");

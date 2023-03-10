@@ -1,4 +1,3 @@
-import { video_player } from "./bot_factory";
 import * as map from "./map";
 
 const queue = map.map;
@@ -23,7 +22,8 @@ module.exports = {
         if (Number.isInteger(time) && !!server_queue && !!server_queue.songs) {
             const track_len = Number(String(server_queue.songs[0].length).split(" ")[0]);
             if (time > track_len-1 || time < 0) return message.channel.send("seek time is greater than track length");
-            return video_player(message.guild, server_queue.songs[0], message, time);  
+            await server_queue.bot.set_stream(server_queue.songs[0], time);
+            await server_queue.bot.play_song();
         } else {
             return message.channel.send("seek time is not an integer or there is no server queue");
         }

@@ -11,58 +11,63 @@ export interface Song {
     type: string;
 }
 
-export const video_player = async (guild: typeof Client, song: Song, message: typeof Client, seconds?: number) => {
-    if (seconds === undefined) seconds = 0;
-
-    const connection = joinVoiceChannel({
-        channelId: message.member.voice.channel.id,
-        guildId: message.guild.id,
-        adapterCreator: message.guild.voiceAdapterCreator
-    });
-
-    const song_queue = queue.get(guild.id);
-
-    if (!song) {
-        connection.destroy();
-        queue.delete(guild.id);
-        console.log("connection destroyed");
-        return;
-    }
-
-    const stream = await play.stream(song.url, {seek: seconds});
-    const player = createAudioPlayer({
-        behaviors: {
+export class Bot_Instance {
+    message: typeof Client;
+    guild_id: string;
+    connection;
+    resource: any;
+    stream: typeof play;
+    player = createAudioPlayer({
+    behaviors: {
             noSubscriber: NoSubscriberBehavior.Play
         }
-    });
+    })
 
-    const resource = createAudioResource(stream.stream, {inputType: stream.type});
-    player.play(resource);
-    connection.subscribe(player);
-    player.on("error", (error: string) => {
-        console.log("error occured during playtime");
-        console.log(error);
-    });
+    constructor(message: typeof Client) {
+        this.guild_id = message.guild.id;
+        this.connection = joinVoiceChannel({
+            channelId: message.member.voice.channel.id,
+            guildId: message.guild.id,
+            adapterCreator: message.guild.voiceAdapterCreator
+        });
+        this.message = message;
+        this.connection.subscribe(this.player);
+    }
 
-    player.on(AudioPlayerStatus.Idle, () => {
-        if (song.title !== song_queue.songs[0].title) {
-            console.log("didn't skip");
+    async set_stream(song: Song, seconds?: number) {
+        if (seconds === undefined) seconds = 0;
+
+        if (!queue.get(this.guild_id).songs[0]) {
+            this.connection.destroy();
+            queue.delete(this.guild_id);
+            console.log("connection destroyed");
+            this.message.channel.send("no songs left in queue, connection destroyed");
             return;
         }
 
-        if (queue.get(guild.id).loop) { // this will be used to implement a loop feature later
-            video_player(guild, song_queue.songs[0], message);
-        } else {
-            try {
-                song_queue.songs.shift();
-                video_player(guild, song_queue.songs[0], message);
-            } catch {
-                console.log("error");
-                message.channel.send("unable to play next track");
-            } 
-        }
-    });
+        this.stream = await play.stream(song.url, {seek: seconds});
+        this.resource = createAudioResource(this.stream.stream, {inputType: this.stream.type});
+    }
 
-    await song_queue.text_channel.send(`Now playing ${song.title}`);
+    async play_song() {
+        this.player.play(this.resource);
+
+        this.player.on(AudioPlayerStatus.Idle, async () => {
+            if (queue.get(this.guild_id).loop) {
+                await this.set_stream(queue.get(this.guild_id).songs[0]);
+                this.player.play(this.resource);
+            } else {
+                try {
+                    queue.get(this.guild_id).songs.shift();
+                    await this.set_stream(queue.get(this.guild_id).songs[0]);
+                    this.player.play(this.resource);
+                    this.message.channel.send(`now playing ${queue.get(this.guild_id).songs[0].title}`);
+                } catch {
+                    console.log("error unable to play next song");
+                    this.message.channel.send("unable to play next track");
+                }
+            }
+        });
+    }
 }
 

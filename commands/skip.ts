@@ -1,7 +1,6 @@
-import { video_player } from "./bot_factory";
-const map = require("./map");
+import * as map from "./map";
 
-const { joinVoiceChannel } = require('@discordjs/voice')
+const { joinVoiceChannel, AudioPlayerStatus, entersState } = require('@discordjs/voice')
 
 const queue = map.map;
 
@@ -19,22 +18,17 @@ module.exports = {
 
         const song_queue = queue.get(message.guild.id);
 
-        const connection = joinVoiceChannel({
-            channelId: message.member.voice.channel.id,
-            guildId: message.guild.id,
-            adapterCreator: message.guild.voiceAdapterCreator
-        });
-
         try {
-            queue.get(message.guild.id).songs.shift();
-            video_player(message.guild, song_queue.songs[0], message);
+            const prev_loop = song_queue.loop;
+            song_queue.loop = false;
+            song_queue.bot.player.stop();
+            song_queue.loop = prev_loop;
         } catch (e) {
-            connection.destroy();
+            song_queue.bot.connection.destroy();
             message.channel.send("something went awfully wrong");
             queue.delete(message.guild.id);
             console.log(e);
             return;
         }
-
     }
 }
