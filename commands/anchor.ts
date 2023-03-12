@@ -1,3 +1,5 @@
+import { Misc } from "./bot_factory";
+
 const map = require('./map');
 
 const queue = map.map;
@@ -7,9 +9,13 @@ module.exports = {
     cooldown: 0,
     description: "anchor the bot's output to a channel",
     async execute(message: typeof Client) {
-        const voice_channel = message.member.voice.channel;
-        const permissions = voice_channel.permissionsFor(message.client.user);
-        if (!permissions.has("SPEAK")) return message.channel.send("you do not have perms");
+
+        const perms: Array<string> = ["SPEAK"];
+
+        if(!Misc.has_perms(message, perms)) {
+            message.channel.send("you do not have proper perms");
+            return;
+        }
 
         const server_instance = queue.get(message.guild.id);
 

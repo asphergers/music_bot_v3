@@ -2,7 +2,7 @@ const play = require("play-dl");
 const yt_search = require("yt-search")
 const { joinVoiceChannel } = require('@discordjs/voice')
 import * as map from "./map";
-import { Song, Bot_Instance } from "./bot_factory";
+import { Song, Bot_Instance, Misc } from "./bot_factory";
 
 console.log(map);
 
@@ -14,6 +14,14 @@ module.exports = {
     cooldown: 0,
     description: 'main command for playing music',
     async execute(message: typeof Client, args: string[]) {
+
+        const perms: Array<string> = ["SPEAK", "CONNECT"];
+
+        if(!Misc.has_perms(message, perms)) {
+            message.channel.send("you do not have proper perms");
+            return;
+        }
+
         const voice_channel = message.member.voice.channel;
         if (!voice_channel) return message.channel.send("get in vc clowboy");
 

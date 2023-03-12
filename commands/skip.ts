@@ -1,6 +1,5 @@
 import * as map from "./map";
-
-const { joinVoiceChannel, AudioPlayerStatus, entersState } = require('@discordjs/voice')
+import { Misc } from "./bot_factory";
 
 const queue = map.map;
 
@@ -10,11 +9,13 @@ module.exports = {
     cooldown: 0,
     description: "skips the current song",
     async execute(message: typeof Client) {
-        const voice_channel = message.member.voice.channel;
-        if (!voice_channel) return message.channel.send("get in vc");
-        const permission = voice_channel.permissionsFor(message.client.user);
-        if (!permission.has("SPEAK")) return message.channel.send("you don't have the correct permissions");
-        if (!permission.has("CONNECT")) return message.channel.send("you don't have the correct permissions");
+
+        const perms: Array<string> = ["SPEAK", "CONNECT"];
+
+        if(!Misc.has_perms(message, perms)) {
+            message.channel.send("you do not have proper perms");
+            return;
+        }
 
         const song_queue = queue.get(message.guild.id);
 

@@ -1,5 +1,6 @@
 import { inspect } from "util";
 import * as map from "./map";
+import { Misc } from "./bot_factory";
 
 const queue = map.map;
 
@@ -9,11 +10,12 @@ module.exports = {
     cooldown: 0,
     description: "shows current song",
     async execute(message: typeof Client) {
-        const voice_channel = message.member.voice.channel;
-        if (!voice_channel) return message.channel.send("get in vc");
-        const permissions = voice_channel.permissionsFor(message.client.user);
-        if (!permissions.has('CONNECT')) return message.channel.send("you do not have the correct perms");
-        if (!permissions.has('SPEAK')) return message.channel.send("you do not have the correct perms");
+        const perms: Array<string> = ["SPEAK", "CONNECT"];
+
+        if(!Misc.has_perms(message, perms)) {
+            message.channel.send("you do not have proper perms");
+            return;
+        }
 
         const server_queue = queue.get(message.guild.id);
 

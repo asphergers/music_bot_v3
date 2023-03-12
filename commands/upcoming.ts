@@ -1,4 +1,5 @@
 import * as map from "./map";
+import { Misc } from "./bot_factory";
 
 const queue = map.map;
 
@@ -8,6 +9,14 @@ module.exports = {
     coodown: 0,
     description: "displays all songs in queue",
     async execute(message: typeof Client) {
+
+        const perms: Array<string> = ["SPEAK", "CONNECT"];
+
+        if(!Misc.has_perms(message, perms)) {
+            message.channel.send("you do not have proper perms");
+            return;
+        }
+
         const voice_channel = message.member.voice.channel;
         if (!voice_channel) return message.channel.send("get in vc");
         const permissions = voice_channel.permissionsFor(message.client.user);
