@@ -11,6 +11,19 @@ export interface Song {
     type: string;
 }
 
+export class Misc {
+    public static has_perms(message: typeof Client, perms: Array<string>): boolean {
+        const voice_channel = message.member.voice.channel;
+        const permissions = voice_channel.permissionsFor(message.client.user);
+
+        perms.forEach(perm => {
+            if(!permissions.has(perm)) return false; 
+        });
+
+        return true;
+    }
+}
+
 export class Bot_Instance {
     message: typeof Client;
     guild_id: string;
